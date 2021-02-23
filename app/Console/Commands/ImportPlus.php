@@ -230,6 +230,10 @@ class ImportPlus extends Command
             ])->post($url, $params);
         }
         $response = $request->getBody()->getContents();
+        $json = json_decode($response,true);
+        if(is_null($json)){
+            dd($response);
+        }
         return json_decode($response,true);
     }
 }
