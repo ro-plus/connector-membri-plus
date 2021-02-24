@@ -53,7 +53,7 @@ class ImportPlus extends Command
                 $members_data = $this->makeRequest('api/users?_page=1&include=role,nbMember,nbProfile,userMembership,membershipFee,sanctions&_per_page=50','GET');
                 $bar = $this->output->createProgressBar($members_data['meta']['last_page']);
                 for ($i=1;$i<=$members_data['meta']['last_page'];$i++){
-                    $page_data = $this->makeRequest('api/users?include=role,nbMember,nbProfile&_per_page=50','GET',$i);
+                    $page_data = $this->makeRequest('api/users?include=role,nbMember,nbProfile,userMembership,membershipFee,sanctions&_per_page=50','GET',$i);
                     if(isset($page_data['data'])){
                         foreach($page_data['data'] as $data){
                             $sm = [];
@@ -68,8 +68,16 @@ class ImportPlus extends Command
                             $profession = '';
                             $political_experience = '';
                             $citizenship = '';
+                            $sanctions = [];
                             if(isset($data['_includes']['sanctions']['data'])&&count($data['_includes']['sanctions']['data'])>0){
-                                dd($data['_includes']['sanctions']['data']);
+                                foreach ($data['_includes']['sanctions']['data'] as $sanction){
+                                    $j_data = json_decode($sanction['s_json'],true);
+                                    foreach ($j_data['content']['fields']['field'] as $field){
+                                        if($field['fieldid']==='66039884'){
+                                            $sanctions[] = $field['fieldvalue'];
+                                        }
+                                    }
+                                }
 
                             }
                             if(isset($data['_includes']['nbMember']['data']['gender'])){
@@ -143,7 +151,7 @@ class ImportPlus extends Command
                             }
                             $member_fee_paid_until = null;
                             if(isset($data['_includes']['userMembership']['data']['m_expires_on'])){
-                                $member_fee_paid_until = $data['_includes']['userMembership']['data']['m_expires_on'];
+                                $member_fee_paid_until = Carbon::parse($data['_includes']['userMembership']['data']['m_expires_on'])->format('Y-m-d');
                             }
                             $r_community = '';
                             $r_subsidiary = '';
@@ -191,7 +199,8 @@ class ImportPlus extends Command
                                 'r_genplus'             => $r_genplus,
                                 'r_region'              => $r_region,
                                 'last_document_nr'      => $last_document_nr,
-                                'date_last_document_nr' => $date_last_document_nr
+                                'date_last_document_nr' => $date_last_document_nr,
+                                'sanctions'             => implode(',',$sanctions),
                             ];
                             $test['signature'] = md5(json_encode($test));
                             $ch = Member::where('nb_id',$test['nb_id'])->first();

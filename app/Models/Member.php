@@ -39,6 +39,7 @@ class Member extends Model
         'r_region',
         'last_document_nr',
         'date_last_document_nr',
+        'sanctions',
         'signature'
     ];
 }

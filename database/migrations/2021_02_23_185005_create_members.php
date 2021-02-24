@@ -46,6 +46,7 @@ class CreateMembers extends Migration
             $table->string('last_document_nr')->nullable();
             $table->date('date_last_document_nr')->nullable();
             $table->string('signature')->nullable();
+            $table->longText('sanctions')->nullable();
             $table->timestamps();
         });
     }
